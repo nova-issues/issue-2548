@@ -3,10 +3,12 @@
 namespace App\Nova;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Nova\Fields\Gravatar;
 use Laravel\Nova\Fields\ID;
 use Laravel\Nova\Fields\Password;
 use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\VaporImage;
 
 class User extends Resource
 {
@@ -44,7 +46,12 @@ class User extends Resource
         return [
             ID::make()->sortable(),
 
-            Gravatar::make()->maxWidth(50),
+            VaporImage::make('Photo', 'photo_url')
+                ->rules('bail', 'required', function($attribute, $value, $fail) use ($request) {
+                    if (Storage::size($request->input('vaporFile')[$attribute]['key']) > 1000) {
+                        return $fail('The image should not have more than 1 KB');
+                    }
+                }),
 
             Text::make('Name')
                 ->sortable()
